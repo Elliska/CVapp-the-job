@@ -6,3 +6,7 @@
     * zjistit kolik znak má běžný inzerát pro text
 * vymyslet datový pipeline, flowchart
 * nakreslit wireframe aplikace. Čím nahradit Adobe XD? - zkusit Figmu
+
+Doplnit info do Readme:
+*	Jak nainstalovat a rozběhnout na vlastním stroji (detailní) - ideálně odkaz na web
+*	Co udělat pro to, aby mohli rozšiřovat a pracovat na tom taky (pull, fork něco takového)
