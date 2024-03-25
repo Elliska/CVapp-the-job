@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import flet as ft
 
 class BaseScraper:
     def __init__(self, url):
@@ -13,10 +14,10 @@ class BaseScraper:
             self.soup = BeautifulSoup(response.content, 'html.parser')
         else:
             raise Exception(f'Failed to retrieve the webpage. Status code: {response.status_code}')
-
+    """
     def parse(self):
         raise NotImplementedError("Subclasses must implement this method")
-    """
+    
     def print_data(self, data):
         print(f'Název pozice: {data["job_name"]}')
         print(f'Firma: {data["company_name"]}')
@@ -123,13 +124,9 @@ class KarriereAtScraper(BaseScraper):
         # Implement parsing logic specific to karriere.at
         pass
 
-# FUNGUJE
-import flet as ft
+#-----------------------------------------------------------------------------------------------------
+# Design logic, later dissect into specific files and modules
 
-#tady by byla definice připojení k databázi a vytvoření/update tabulky
-#mělo by vytvoření/update být spíše v def?
-
-#chtělo by to přidat i políčko zadej jobs URL a ta si vytáhne všechna potřebná data s pomocí scrape. Lepší než startupjobs, jejichž web se mi nepovedlo scrapenout.
 def main(page):
     website = ft.Column()
     website.style = {'overflow': 'auto', 'max-height': '500px'}
@@ -146,7 +143,6 @@ def main(page):
             # Fetch and parse the data
             scraper.fetch()
             data = scraper.parse()
-
             
             # Display the data on the UI
             website.controls.append(ft.Text(f"Název pozice: {data['job_name']}"))
@@ -160,7 +156,6 @@ def main(page):
             website.controls.append(ft.Text(f'Matching words:", {data["matching_words"]}'))
             for index, paragraph in enumerate(data["text"]):
                website.controls.append(ft.Text(f'Paragraph {index + 1}: {paragraph}'))
-            
 
         except Exception as ex:
             website.controls.append(ft.Text(f"An error occurred: {str(ex)}"))
