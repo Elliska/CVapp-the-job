@@ -1,6 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 import re
+import flet as ft
 
 class BaseScraper:
     def __init__(self, url):
@@ -13,23 +14,6 @@ class BaseScraper:
             self.soup = BeautifulSoup(response.content, 'html.parser')
         else:
             raise Exception(f'Failed to retrieve the webpage. Status code: {response.status_code}')
-
-    def parse(self):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def print_data(self, data):
-        print(f'Název pozice: {data["job_name"]}')
-        print(f'Firma: {data["company_name"]}')
-        print(f'Street: {data["address_street"]}')
-        print(f'City: {data["address_city"]}')
-        print(f'Městská část: {data["address_district"]}')
-        print(f'Zodpovědná osoba: {data["responsible_name"]}')
-        print(f'Telefonní číslo 1: {data["first_number"]}')
-        print(f'Telefonní číslo 2: {data["second_number"]}')
-        print(f'Matching words:", {data["matching_words"]}')
-        # turned off for testing purposes
-        #for index, paragraph in enumerate(data["text"]):
-        #    print(f'Paragraph {index + 1}: {paragraph}')
 
     def get_substrings(self):
         # pak tahat z databáze
@@ -51,6 +35,7 @@ class JobsCzScraper(BaseScraper):
         # Now self.soup contains the parsed HTML, ready for parsing specific elements
         address_street, address_city, address_district = self.parse_address()
         first_number, second_number = self.parse_phone_numbers()
+        formatted_text = self.parse_text_html()
         data = {
             'job_name': self.parse_job_name(),
             'company_name': self.parse_company_name(),
@@ -62,6 +47,8 @@ class JobsCzScraper(BaseScraper):
             'first_number': first_number,
             'second_number': second_number,
             'matching_words': self.parse_matching_words(),
+            'text': self.parse_text(),
+            'html_text': self.parse_text_html(),
         }
         return data
 
@@ -80,12 +67,52 @@ class JobsCzScraper(BaseScraper):
         address_district = ' '.join(address_parts[2:]).strip() if len(address_parts) > 2 else ''
 
         return address_street, address_city, address_district
-    
+
     def parse_text(self):
-        # gets entire offer's text
-        paragraphs = self.soup.find_all('p', class_='typography-body-large-text-regular mb-800')
-        text_content = [paragraph.get_text() for paragraph in paragraphs]
-        return text_content
+        # Define a list to hold the text content
+        text_content = []
+
+        # Find the container that holds all the text elements
+        content_container = self.soup.find('div', class_='RichContent mb-1400')
+
+        # Iterate over all elements in the container
+        for element in content_container.descendants:
+            if isinstance(element, NavigableString):
+                parent = element.parent
+                if parent.name not in ['script', 'style']:  # Exclude script and style elements
+                    text_content.append(element.strip() + '\n')  # Add a newline character after each text block
+            elif isinstance(element, Tag):
+                if element.name == 'li':
+                    text_content.append(element.get_text().strip() + '\n')  # Add a newline character after each list item
+
+        # Filter out empty strings
+        text_content = [text for text in text_content if text]
+
+        # Join the text content into a single string
+        formatted_text = ''.join(text_content).strip()
+        return formatted_text
+    
+    def parse_text_html(self):
+        # html content, probably should go to the database to be formattable
+        html_content = []
+
+        content_container = self.soup.find('div', class_='RichContent mb-1400') 
+
+        def extract_html(element):
+            if isinstance(element, Tag):
+                # Start tag
+                html_content.append(f'<{element.name}>')
+                for content in element.contents:
+                    extract_html(content)
+                # End tag
+                html_content.append(f'</{element.name}>')
+            elif isinstance(element, NavigableString):
+                html_content.append(str(element))
+
+        extract_html(content_container)
+
+        html_content = ''.join(html_content).strip()
+        return html_content
     
     def parse_responsible_name(self):
         footer_name = self.soup.find('a', class_='link-primary text-primary').get_text()
@@ -123,29 +150,26 @@ class KarriereAtScraper(BaseScraper):
         # Implement parsing logic specific to karriere.at
         pass
 
-# FUNGUJE
-import flet as ft
+#-----------------------------------------------------------------------------------------------------
+# Design logic, later dissect into specific files and modules
 
-#tady by byla definice připojení k databázi a vytvoření/update tabulky
-#mělo by vytvoření/update být spíše v def?
-
-#chtělo by to přidat i políčko zadej jobs URL a ta si vytáhne všechna potřebná data s pomocí scrape. Lepší než startupjobs, jejichž web se mi nepovedlo scrapenout.
 def main(page):
-    url = ft.TextField(label="Zadej adresu webu", width=300)
-    website = ft.Column()
+    website = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+    website.style = {'overflow': 'auto', 'max-height': '500px'}
+    url = ft.TextField(label='Zadej adresu webu', width=300)
 
-
-    def button_clicked(e): #tady by přišla definice zobrazení dat a jejich uložení do DB
+    def button_clicked(e):  # tady by přišla definice zobrazení dat a jejich uložení do DB
         try:
             if 'jobs.cz' in url.value:
                 scraper = JobsCzScraper(url.value)
             elif 'karriere.at' in url.value:
                 scraper = KarriereAtScraper(url.value)
             else:
-                raise ValueError("No scraper found for this URL")
+                raise ValueError('No scraper found for this URL')
             # Fetch and parse the data
             scraper.fetch()
             data = scraper.parse()
+            
             # Display the data on the UI
             website.controls.append(ft.Text(f"Název pozice: {data['job_name']}"))
             website.controls.append(ft.Text(f"Firma: {data['company_name']}"))
@@ -156,13 +180,14 @@ def main(page):
             website.controls.append(ft.Text(f'Telefonní číslo 1: {data["first_number"]}'))
             website.controls.append(ft.Text(f'Telefonní číslo 2: {data["second_number"]}'))
             website.controls.append(ft.Text(f'Matching words:", {data["matching_words"]}'))
-            for index, paragraph in enumerate(data["text"]):
-               website.controls.append(ft.Text(f'Paragraph {index + 1}: {paragraph}'))
+            website.controls.append(ft.Text(f'{data["text"]}'))
+            website.controls.append(ft.Text(data["text"]))
+            website.controls.append(ft.Text(data["html_text"]))
 
         except Exception as ex:
-            website.controls.append(ft.Text(f"An error occurred: {str(ex)}"))
+            website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
         finally:
-            url.value = ""
+            url.value = ''
             page.update()
             url.focus()
 
@@ -170,12 +195,23 @@ def main(page):
         ft.Row(controls=[
             url,
         ]),
-        ft.ElevatedButton("Scrape Website", on_click=button_clicked),
+        ft.ElevatedButton('Offer preview', on_click=button_clicked),
         website
     )
 
 ft.app(target=main)
 
+
 # tested on: 
 # https://www.jobs.cz/rpd/2000147251/?searchId=c2227d40-dc5b-47f1-b6bd-37a9caefcdd4&rps=233
+# https://www.jobs.cz/fp/asb-czech-republic-s-r-o-233975/2000176507/?searchId=5b2e93b9-305a-443a-87dd-e647bfdf8e7c&rps=329 
 
+""""
+logika pro tahání tříd z jiných souborů:
+from jobs_cz_scraper import JobsCzScraper
+
+soubor jobs_cz_scraper.py bude mít třídu:
+class JobsCzScraper:
+    # Your scraping logic here
+    ...
+"""
