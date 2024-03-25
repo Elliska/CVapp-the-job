@@ -180,8 +180,7 @@ def main(page):
             website.controls.append(ft.Text(f'Telefonní číslo 1: {data["first_number"]}'))
             website.controls.append(ft.Text(f'Telefonní číslo 2: {data["second_number"]}'))
             website.controls.append(ft.Text(f'Matching words:", {data["matching_words"]}'))
-            website.controls.append(ft.Text(f'{data["text"]}'))
-            website.controls.append(ft.Text(data["text"]))
+            website.controls.append(ft.Text(f'{data["text"]}')) # this text has issues
             website.controls.append(ft.Text(data["html_text"]))
 
         except Exception as ex:

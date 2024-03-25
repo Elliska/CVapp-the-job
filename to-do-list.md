@@ -13,4 +13,5 @@ Doplnit info do Readme:
 
 ### Jobs.cz scraper
 
-* Je potřeba přidat i ul/li scrape a projít vícero inzerátů, zda se někde nevyskytují i jiné struktury (h, bold, quote etc.)
+* Je potřeba otestovat na vícero inzerátech
+* vyřešit duplikace a chyby zobrazení textu
