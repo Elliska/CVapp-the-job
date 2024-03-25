@@ -69,26 +69,13 @@ class JobsCzScraper(BaseScraper):
         return address_street, address_city, address_district
 
     def parse_text(self):
-        # Define a list to hold the text content
+        # gets entire offer's text
         text_content = []
-
-        # Find the container that holds all the text elements
         content_container = self.soup.find('div', class_='RichContent mb-1400')
 
-        # Iterate over all elements in the container
-        for element in content_container.descendants:
-            if isinstance(element, NavigableString):
-                parent = element.parent
-                if parent.name not in ['script', 'style']:  # Exclude script and style elements
-                    text_content.append(element.strip() + '\n')  # Add a newline character after each text block
-            elif isinstance(element, Tag):
-                if element.name == 'li':
-                    text_content.append(element.get_text().strip() + '\n')  # Add a newline character after each list item
+        for string in content_container.stripped_strings:
+            text_content.append(string + '\n') 
 
-        # Filter out empty strings
-        text_content = [text for text in text_content if text]
-
-        # Join the text content into a single string
         formatted_text = ''.join(text_content).strip()
         return formatted_text
     
@@ -153,53 +140,67 @@ class KarriereAtScraper(BaseScraper):
 #-----------------------------------------------------------------------------------------------------
 # Design logic, later dissect into specific files and modules
 
-def main(page):
-    website = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
-    website.style = {'overflow': 'auto', 'max-height': '500px'}
-    url = ft.TextField(label='Zadej adresu webu', width=300)
+class ScraperApp:
+    def __init__(self, page):
+        self.page = page
+        self.website = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+        self.website.style = {'overflow': 'auto', 'max-height': '500px'}
+        self.url = ft.TextField(label='Insert URL address', width=300)
+        self.setup_ui()
 
-    def button_clicked(e):  # tady by přišla definice zobrazení dat a jejich uložení do DB
+    def setup_ui(self):
+        preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
+        remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
+        self.page.add(
+            ft.Row(controls=[self.url]),
+            ft.Row(controls=[preview_button, remove_button]),
+            self.website
+        )
+
+    def button_preview(self, e):
         try:
-            if 'jobs.cz' in url.value:
-                scraper = JobsCzScraper(url.value)
-            elif 'karriere.at' in url.value:
-                scraper = KarriereAtScraper(url.value)
+            if 'jobs.cz' in self.url.value:
+                scraper = JobsCzScraper(self.url.value)
+            elif 'karriere.at' in self.url.value:
+                scraper = KarriereAtScraper(self.url.value)
             else:
                 raise ValueError('No scraper found for this URL')
-            # Fetch and parse the data
             scraper.fetch()
             data = scraper.parse()
-            
-            # Display the data on the UI
-            website.controls.append(ft.Text(f"Název pozice: {data['job_name']}"))
-            website.controls.append(ft.Text(f"Firma: {data['company_name']}"))
-            website.controls.append(ft.Text(f"Ulice: {data['address_street']}"))
-            website.controls.append(ft.Text(f"Město: {data['address_city']}"))
-            website.controls.append(ft.Text(f"Městská část: {data['address_district']}"))
-            website.controls.append(ft.Text(f'Zodpovědná osoba: {data["responsible_name"]}'))
-            website.controls.append(ft.Text(f'Telefonní číslo 1: {data["first_number"]}'))
-            website.controls.append(ft.Text(f'Telefonní číslo 2: {data["second_number"]}'))
-            website.controls.append(ft.Text(f'Matching words:", {data["matching_words"]}'))
-            website.controls.append(ft.Text(f'{data["text"]}'))
-            website.controls.append(ft.Text(data["text"]))
-            website.controls.append(ft.Text(data["html_text"]))
-
+            self.display_data(data)
         except Exception as ex:
-            website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
         finally:
-            url.value = ''
-            page.update()
-            url.focus()
+            self.url.value = ''
+            self.page.update()
+            self.url.focus()
 
-    page.add(
-        ft.Row(controls=[
-            url,
-        ]),
-        ft.ElevatedButton('Offer preview', on_click=button_clicked),
-        website
-    )
+    def display_data(self, data):
+        self.website.controls.clear()
+        self.website.controls.extend([
+            ft.Text(f"Position name: {data['job_name']}"),
+            ft.Text(f"Company: {data['company_name']}"),
+            ft.Text(f"Street: {data['address_street']}"),
+            ft.Text(f"City: {data['address_city']}"),
+            ft.Text(f"City district: {data['address_district']}"),
+            ft.Text(f'Responsible person: {data["responsible_name"]}'),
+            ft.Text(f'Phone number 1: {data["first_number"]}'),
+            ft.Text(f'Phone number 2: {data["second_number"]}'),
+            ft.Text(f'Matching words: {data["matching_words"]}'),
+            ft.Text(f'{data["text"]}'),
+            ft.Text(data["html_text"]),
+        ])
+        self.page.update()
 
-ft.app(target=main)
+    def button_remove(self, e):
+        self.website.controls.clear()
+        self.page.update()
+
+def main(page):
+    app = ScraperApp(page)
+
+if __name__ == "__main__":
+    ft.app(target=main)
 
 
 # tested on: 

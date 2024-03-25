@@ -69,26 +69,13 @@ class JobsCzScraper(BaseScraper):
         return address_street, address_city, address_district
 
     def parse_text(self):
-        # Define a list to hold the text content
+        # gets entire offer's text
         text_content = []
-
-        # Find the container that holds all the text elements
         content_container = self.soup.find('div', class_='RichContent mb-1400')
 
-        # Iterate over all elements in the container
-        for element in content_container.descendants:
-            if isinstance(element, NavigableString):
-                parent = element.parent
-                if parent.name not in ['script', 'style']:  # Exclude script and style elements
-                    text_content.append(element.strip() + '\n')  # Add a newline character after each text block
-            elif isinstance(element, Tag):
-                if element.name == 'li':
-                    text_content.append(element.get_text().strip() + '\n')  # Add a newline character after each list item
+        for string in content_container.stripped_strings:
+            text_content.append(string + '\n') 
 
-        # Filter out empty strings
-        text_content = [text for text in text_content if text]
-
-        # Join the text content into a single string
         formatted_text = ''.join(text_content).strip()
         return formatted_text
     
@@ -200,7 +187,7 @@ class ScraperApp:
             ft.Text(f'Phone number 1: {data["first_number"]}'),
             ft.Text(f'Phone number 2: {data["second_number"]}'),
             ft.Text(f'Matching words: {data["matching_words"]}'),
-            ft.Text(f'{data["text"]}'), # this text has issues
+            ft.Text(f'{data["text"]}'),
             ft.Text(data["html_text"]),
         ])
         self.page.update()
