@@ -138,6 +138,101 @@ class KarriereAtScraper(BaseScraper):
         pass
 
 #-----------------------------------------------------------------------------------------------------
+<<<<<<< Updated upstream
+=======
+# Database logic, later into DB
+import openpyxl
+import os
+import pandas as pd
+
+class DataRepository:
+    def __init__(self, scraper_app_instance): 
+        self.scraper_app = scraper_app_instance
+
+    def testing(self):
+        try:
+            data = self.scraper_app.previewed_data
+            if not data:
+                raise ValueError("No previewed data available.")
+            
+            job_data = {
+                'job_name': data['job_name'],
+                'text': data['text'],
+                'html_text': data['html_text'],
+            }
+            data_job = pd.DataFrame.from_dict(job_data, orient='index')
+
+            excel_file = 'jobs_data.xlsx'
+
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+
+            return "Data successfully processed"
+        except Exception as ex:
+            return f"An error occurred: {str(ex)}"
+        finally:
+            print('Everything is fine and life is awesome!')
+
+    def process_data(self):
+        try:
+            data = self.scraper_app.previewed_data
+            if not data:
+                raise ValueError("No previewed data available.")
+            else:
+                job_data = {
+                    'job_name': data['job_name'],
+                    'text': data['text'],
+                    'html_text': data['html_text'],
+                }
+                data_job = pd.DataFrame.from_dict(job_data, orient='index')
+                print(data_job)
+
+            excel_file = 'outputs/jobs_data.xlsx'
+
+            if os.path.exists(excel_file):
+                print(f"Appending data to existing file: {excel_file}")
+                with pd.ExcelWriter(excel_file, mode='a', engine='openpyxl') as writer:
+                    data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+            else:
+                print(f"Creating new file: {excel_file}")
+                os.makedirs(os.path.dirname(excel_file), exist_ok=True)
+                with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                    data_job.to_excel(writer, sheet_name='job offers', index=False)
+
+            return "Data successfully processed"
+        except Exception as ex:
+            return f"An error occurred: {str(ex)}"
+        finally: 
+            print('Everything is fine and life is awesome!')
+    
+    """ Data handling logic ideas:
+    address_data = {
+    'Street': data['address_street'],
+    'City': data['address_city'],
+    'District': data['address_district']
+    }
+    data_address = pd.DataFrame.from_dict(address_data, orient='index', columns=['Value'])
+
+    other_data = {
+        'Job Name': data['job_name'],
+        'Company': data['company_name'],
+        'Responsible Person': data['responsible_name'],
+        'Matching Words': data['matching_words'],
+        'Additional Text': data['text'],
+        'HTML Text': data['html_text']
+    }
+    data_other = pd.DataFrame.from_dict(other_data, orient='index', columns=['Value'])
+
+    # Print the DataFrames (you can adjust this as needed)
+    print("Address Data:")
+    print(data_address)
+    print("\nOther Data:")
+    print(data_other)
+
+    """
+
+#-----------------------------------------------------------------------------------------------------
+>>>>>>> Stashed changes
 # Design logic, later dissect into specific files and modules
 
 class ScraperApp:
@@ -151,9 +246,17 @@ class ScraperApp:
     def setup_ui(self):
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
+<<<<<<< Updated upstream
         self.page.add(
             ft.Row(controls=[self.url]),
             ft.Row(controls=[preview_button, remove_button]),
+=======
+        write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
+        test_button = ft.ElevatedButton('Test button', on_click=self.button_testing)
+        self.page.add(
+            ft.Row(controls=[self.url]),
+            ft.Row(controls=[preview_button, remove_button, write_button, test_button]),
+>>>>>>> Stashed changes
             self.website
         )
 
@@ -174,6 +277,84 @@ class ScraperApp:
             self.url.value = ''
             self.page.update()
             self.url.focus()
+<<<<<<< Updated upstream
+=======
+
+    def button_testing(self, e):
+        df = pd.DataFrame([[11, 21, 31], [12, 22, 32], [31, 32, 33]],
+                  index=['one', 'two', 'three'], columns=['a', 'b', 'c'])
+
+        print(df)
+
+        df.to_excel('pandas_to_excel.xlsx', sheet_name='new_sheet_name')
+    
+    def button_write_to_db(self, e):
+        try:
+            if 'jobs.cz' in self.url.value:
+                scraper = JobsCzScraper(self.url.value)
+            elif 'karriere.at' in self.url.value:
+                scraper = KarriereAtScraper(self.url.value)
+            else:
+                raise ValueError('No scraper found for this URL')
+            scraper.fetch()
+            data = scraper.parse()
+            self.display_data(data)
+            self.previewed_data.append(data)
+
+            job_data = {
+            'job_name': data['job_name'],
+            'text': data['text'],
+            'html_text': data['html_text'],
+            }
+
+            data_job = pd.DataFrame(job_data, index=[0])
+            print(data_job)
+            excel_file = 'jobs_data.xlsx'
+
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=True, header=True)
+
+        except Exception as ex:
+            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+        finally:
+            self.url.value = ''
+            self.page.update()
+            self.url.focus()
+        """
+        try:
+            data = self.previewed_data
+            if not data:
+                raise ValueError("No previewed data available.")
+
+            if not isinstance(data, dict):
+                raise ValueError("Previewed data must be a dictionary.")
+
+            job_data = {
+                data['job_name']: 1,
+                data['text']: 2,
+                data['html_text']:3,
+            }
+            data_job = pd.DataFrame(job_data, orient='index')
+
+            excel_file = 'jobs_data.xlsx'
+
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+
+            self.website.controls.clear()
+            self.page.update()
+            self.website.controls.append(ft.Text(f'Your data have been successfully imported'))
+
+        except Exception as ex:
+            self.website.controls.clear()
+            self.page.update()
+            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+
+        finally:
+            self.page.update()
+            self.url.focus()
+        """
+>>>>>>> Stashed changes
 
     def display_data(self, data):
         self.website.controls.clear()
