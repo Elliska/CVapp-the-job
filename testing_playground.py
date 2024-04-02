@@ -35,7 +35,6 @@ class JobsCzScraper(BaseScraper):
         # Now self.soup contains the parsed HTML, ready for parsing specific elements
         address_street, address_city, address_district = self.parse_address()
         first_number, second_number = self.parse_phone_numbers()
-        formatted_text = self.parse_text_html()
         data = {
             'job_name': self.parse_job_name(),
             'company_name': self.parse_company_name(),
@@ -138,6 +137,50 @@ class KarriereAtScraper(BaseScraper):
         pass
 
 #-----------------------------------------------------------------------------------------------------
+# Database logic, later into DB
+
+class DataRepository:
+    def __init__(self, scraper_app_instance): 
+        self.scraper_app = scraper_app_instance
+
+    def process_data(self):
+        try:
+            # Access the stored previewed data
+            data = self.scraper_app.previewed_data
+        # add dta processing logic
+        finally: 
+            print('Everything is fine and life is awesome!')
+
+
+        return data 
+    
+    """ Data handling logic ideas:
+    address_data = {
+    'Street': data['address_street'],
+    'City': data['address_city'],
+    'District': data['address_district']
+    }
+    data_address = pd.DataFrame.from_dict(address_data, orient='index', columns=['Value'])
+
+    other_data = {
+        'Job Name': data['job_name'],
+        'Company': data['company_name'],
+        'Responsible Person': data['responsible_name'],
+        'Matching Words': data['matching_words'],
+        'Additional Text': data['text'],
+        'HTML Text': data['html_text']
+    }
+    data_other = pd.DataFrame.from_dict(other_data, orient='index', columns=['Value'])
+
+    # Print the DataFrames (you can adjust this as needed)
+    print("Address Data:")
+    print(data_address)
+    print("\nOther Data:")
+    print(data_other)
+
+    """
+
+#-----------------------------------------------------------------------------------------------------
 # Design logic, later dissect into specific files and modules
 
 class ScraperApp:
@@ -146,14 +189,16 @@ class ScraperApp:
         self.website = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
         self.website.style = {'overflow': 'auto', 'max-height': '500px'}
         self.url = ft.TextField(label='Insert URL address', width=300)
+        self.previewed_data = []
         self.setup_ui()
 
     def setup_ui(self):
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
+        write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
         self.page.add(
             ft.Row(controls=[self.url]),
-            ft.Row(controls=[preview_button, remove_button]),
+            ft.Row(controls=[preview_button, remove_button, write_button]),
             self.website
         )
 
@@ -168,12 +213,33 @@ class ScraperApp:
             scraper.fetch()
             data = scraper.parse()
             self.display_data(data)
+            self.previewed_data.append(data)
         except Exception as ex:
             self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
         finally:
             self.url.value = ''
             self.page.update()
             self.url.focus()
+    
+    def button_write_to_db(self, e):
+        try:
+            if not self.previewed_data:
+                raise ValueError('No previewed data available')
+
+            # Process the stored previewed data (e.g., using a DataRepository class)
+            # ...
+
+            self.website.controls.clear()
+            self.page.update()
+            self.website.controls.append(ft.Text(f'Your data have been successfully imported'))
+
+        except Exception as ex:
+            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+
+        finally:
+            self.page.update()
+            self.url.focus()
+        
 
     def display_data(self, data):
         self.website.controls.clear()
@@ -195,6 +261,8 @@ class ScraperApp:
     def button_remove(self, e):
         self.website.controls.clear()
         self.page.update()
+
+    # add def button with if, then use this scrpaer to data handling
 
 def main(page):
     app = ScraperApp(page)
