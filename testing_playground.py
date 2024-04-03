@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 import re
 import flet as ft
+import logging
 """
 import os
 
@@ -153,33 +154,36 @@ import os
 import pandas as pd
 
 class DataRepository:
-    def __init__(self, previewed_data): 
-        self.scraper_app = previewed_data
+    def __init__(self, previewed_data):
+        self.previewed_data = previewed_data
 
-    def testing(self):
+    def basic_data_handling(self):
+        data = self.previewed_data
         try:
-            data = self.scraper_app.previewed_data
             if not data:
                 raise ValueError("No previewed data available.")
-            
+            print(data)
+            # here starts the problem in data handling
             job_data = {
-                'job_name': data['job_name'],
-                'text': data['text'],
-                'html_text': data['html_text'],
+                'job_name': data[0]['job_name'],
+                'text': data[0]['text'],
+                'html_text': data[0]['html_text'],
             }
+
+            print(job_data)
             data_job = pd.DataFrame.from_dict(job_data, orient='index')
             print(data_job)
 
             excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
-
             with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
                 data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
 
             return "Data successfully processed"
         except Exception as ex:
+            logging.error(f"An error occurred: {str(ex)}")
             return f"An error occurred: {str(ex)}"
         finally:
-            print('Everything is fine and life is awesome!')
+            logging.info('Everything is fine and life is awesome!')
 
     def process_data(self):
         try:
@@ -255,102 +259,42 @@ class ScraperApp:
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
         write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
-        test_button = ft.ElevatedButton('Test button', on_click=self.button_testing)
         self.page.add(
             ft.Row(controls=[self.url]),
-            ft.Row(controls=[preview_button, remove_button, write_button, test_button]),
+            ft.Row(controls=[preview_button, remove_button, write_button]),
 
             self.website
         )
 
+    def button_write_to_db(self, e):
+        data_repo = DataRepository(self.previewed_data)
+        data_repo.basic_data_handling()
+
+    def get_scraper(self, url):
+        if 'jobs.cz' in url:
+            return JobsCzScraper(url)
+        elif 'karriere.at' in url:
+            return KarriereAtScraper(url)
+        else:
+            raise ValueError('No scraper found for this URL')
+
     def button_preview(self, e):
         try:
-            if 'jobs.cz' in self.url.value:
-                scraper = JobsCzScraper(self.url.value)
-            elif 'karriere.at' in self.url.value:
-                scraper = KarriereAtScraper(self.url.value)
-            else:
-                raise ValueError('No scraper found for this URL')
+            scraper = self.get_scraper(self.url.value)
             scraper.fetch()
             data = scraper.parse()
             self.display_data(data)
             self.previewed_data.append(data)
         except Exception as ex:
-            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+            self.handle_error(f'An error occurred: {str(ex)}')
         finally:
             self.url.value = ''
             self.page.update()
             self.url.focus()
 
-    def button_testing(self, e):
-        DataRepository.testing(self.previewed_data)
-    
-    def button_write_to_db(self, e):
-        try:
-            if 'jobs.cz' in self.url.value:
-                scraper = JobsCzScraper(self.url.value)
-            elif 'karriere.at' in self.url.value:
-                scraper = KarriereAtScraper(self.url.value)
-            else:
-                raise ValueError('No scraper found for this URL')
-            scraper.fetch()
-            data = scraper.parse()
-            self.display_data(data)
-            self.previewed_data.append(data)
-
-            job_data = {
-            'job_name': data['job_name'],
-            'text': data['text'],
-            'html_text': data['html_text'],
-            }
-
-            data_job = pd.DataFrame(job_data, index=[0])
-            print(data_job)
-            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
-
-            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
-                data_job.to_excel(writer, sheet_name='job offers', index=True, header=True)
-
-        except Exception as ex:
-            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
-        finally:
-            self.url.value = ''
-            self.page.update()
-            self.url.focus()
-        """
-        try:
-            data = self.previewed_data
-            if not data:
-                raise ValueError("No previewed data available.")
-
-            if not isinstance(data, dict):
-                raise ValueError("Previewed data must be a dictionary.")
-
-            job_data = {
-                data['job_name']: 1,
-                data['text']: 2,
-                data['html_text']:3,
-            }
-            data_job = pd.DataFrame(job_data, orient='index')
-
-            excel_file = 'jobs_data.xlsx'
-
-            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
-                data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
-
-            self.website.controls.clear()
-            self.page.update()
-            self.website.controls.append(ft.Text(f'Your data have been successfully imported'))
-
-        except Exception as ex:
-            self.website.controls.clear()
-            self.page.update()
-            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
-
-        finally:
-            self.page.update()
-            self.url.focus()
-        """
+    def handle_error(self, message):
+        self.website.controls.append(ft.Text(message))
+        logging.error(message)
 
     def display_data(self, data):
         self.website.controls.clear()

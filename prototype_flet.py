@@ -2,7 +2,17 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 import re
 import flet as ft
+import logging
+"""
+import os
 
+# not elegant, but sort of working. Not suprisingly only on tested device :(
+os.chdir("..")
+os.chdir("..")
+os.chdir("Projekt/CVapp-the-job")
+current_directory = os.getcwd()
+print(current_directory)
+"""
 class BaseScraper:
     def __init__(self, url):
         self.url = url
@@ -138,6 +148,102 @@ class KarriereAtScraper(BaseScraper):
         pass
 
 #-----------------------------------------------------------------------------------------------------
+# Database logic, later into DB
+import openpyxl
+import os
+import pandas as pd
+
+class DataRepository:
+    def __init__(self, previewed_data):
+        self.previewed_data = previewed_data
+
+    def basic_data_handling(self):
+        data = self.previewed_data
+        try:
+            if not data:
+                raise ValueError("No previewed data available.")
+            print(data)
+            # here starts the problem in data handling
+            job_data = {
+                'job_name': data[0]['job_name'],
+                'text': data[0]['text'],
+                'html_text': data[0]['html_text'],
+            }
+
+            print(job_data)
+            data_job = pd.DataFrame.from_dict(job_data, orient='index')
+            print(data_job)
+
+            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+
+            return "Data successfully processed"
+        except Exception as ex:
+            logging.error(f"An error occurred: {str(ex)}")
+            return f"An error occurred: {str(ex)}"
+        finally:
+            logging.info('Everything is fine and life is awesome!')
+
+    def process_data(self):
+        try:
+            data = self.scraper_app.previewed_data
+            if not data:
+                raise ValueError("No previewed data available.")
+            else:
+                job_data = {
+                    'job_name': data['job_name'],
+                    'text': data['text'],
+                    'html_text': data['html_text'],
+                }
+                data_job = pd.DataFrame.from_dict(job_data, orient='index')
+                print(data_job)
+
+            excel_file = 'outputs/jobs_data.xlsx'
+
+            if os.path.exists(excel_file):
+                print(f"Appending data to existing file: {excel_file}")
+                with pd.ExcelWriter(excel_file, mode='a', engine='openpyxl') as writer:
+                    data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+            else:
+                print(f"Creating new file: {excel_file}")
+                os.makedirs(os.path.dirname(excel_file), exist_ok=True)
+                with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                    data_job.to_excel(writer, sheet_name='job offers', index=False)
+
+            return "Data successfully processed"
+        except Exception as ex:
+            return f"An error occurred: {str(ex)}"
+        finally: 
+            print('Everything is fine and life is awesome!')
+    
+    """ Data handling logic ideas:
+    address_data = {
+    'Street': data['address_street'],
+    'City': data['address_city'],
+    'District': data['address_district']
+    }
+    data_address = pd.DataFrame.from_dict(address_data, orient='index', columns=['Value'])
+
+    other_data = {
+        'Job Name': data['job_name'],
+        'Company': data['company_name'],
+        'Responsible Person': data['responsible_name'],
+        'Matching Words': data['matching_words'],
+        'Additional Text': data['text'],
+        'HTML Text': data['html_text']
+    }
+    data_other = pd.DataFrame.from_dict(other_data, orient='index', columns=['Value'])
+
+    # Print the DataFrames (you can adjust this as needed)
+    print("Address Data:")
+    print(data_address)
+    print("\nOther Data:")
+    print(data_other)
+
+    """
+
+#-----------------------------------------------------------------------------------------------------
 # Design logic, later dissect into specific files and modules
 
 class ScraperApp:
@@ -147,33 +253,48 @@ class ScraperApp:
         self.website.style = {'overflow': 'auto', 'max-height': '500px'}
         self.url = ft.TextField(label='Insert URL address', width=300)
         self.setup_ui()
+        self.previewed_data = []
 
     def setup_ui(self):
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
+        write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
         self.page.add(
             ft.Row(controls=[self.url]),
-            ft.Row(controls=[preview_button, remove_button]),
+            ft.Row(controls=[preview_button, remove_button, write_button]),
+
             self.website
         )
 
+    def button_write_to_db(self, e):
+        data_repo = DataRepository(self.previewed_data)
+        data_repo.basic_data_handling()
+
+    def get_scraper(self, url):
+        if 'jobs.cz' in url:
+            return JobsCzScraper(url)
+        elif 'karriere.at' in url:
+            return KarriereAtScraper(url)
+        else:
+            raise ValueError('No scraper found for this URL')
+
     def button_preview(self, e):
         try:
-            if 'jobs.cz' in self.url.value:
-                scraper = JobsCzScraper(self.url.value)
-            elif 'karriere.at' in self.url.value:
-                scraper = KarriereAtScraper(self.url.value)
-            else:
-                raise ValueError('No scraper found for this URL')
+            scraper = self.get_scraper(self.url.value)
             scraper.fetch()
             data = scraper.parse()
             self.display_data(data)
+            self.previewed_data.append(data)
         except Exception as ex:
-            self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
+            self.handle_error(f'An error occurred: {str(ex)}')
         finally:
             self.url.value = ''
             self.page.update()
             self.url.focus()
+
+    def handle_error(self, message):
+        self.website.controls.append(ft.Text(message))
+        logging.error(message)
 
     def display_data(self, data):
         self.website.controls.clear()
