@@ -2,7 +2,16 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 import re
 import flet as ft
+"""
+import os
 
+# not elegant, but sort of working. Not suprisingly only on tested device :(
+os.chdir("..")
+os.chdir("..")
+os.chdir("Projekt/CVapp-the-job")
+current_directory = os.getcwd()
+print(current_directory)
+"""
 class BaseScraper:
     def __init__(self, url):
         self.url = url
@@ -239,6 +248,7 @@ class ScraperApp:
         self.website.style = {'overflow': 'auto', 'max-height': '500px'}
         self.url = ft.TextField(label='Insert URL address', width=300)
         self.setup_ui()
+        self.previewed_data = []
 
     def setup_ui(self):
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
@@ -299,7 +309,7 @@ class ScraperApp:
 
             data_job = pd.DataFrame(job_data, index=[0])
             print(data_job)
-            excel_file = 'jobs_data.xlsx'
+            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
 
             with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
                 data_job.to_excel(writer, sheet_name='job offers', index=True, header=True)
