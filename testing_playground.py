@@ -162,22 +162,26 @@ class DataRepository:
         try:
             if not data:
                 raise ValueError("No previewed data available.")
-            print(data)
-            # here starts the problem in data handling
-            job_data = {
-                'job_name': data[0]['job_name'],
-                'text': data[0]['text'],
-                'html_text': data[0]['html_text'],
-            }
-
-            print(job_data)
-            data_job = pd.DataFrame.from_dict(job_data, orient='index')
-            print(data_job)
+            #print(data)
 
             excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
-            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
-                data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
+            existing_df = pd.read_excel('C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx', sheet_name='job offers')
 
+            data_job = pd.DataFrame(data)
+
+            print(data_job)
+
+            if existing_df is not None:
+                existing_df = pd.read_excel(excel_file, sheet_name='job offers')
+            else:
+                existing_df = pd.DataFrame()
+
+            data_job = pd.concat([existing_df, data_job], ignore_index=True)
+            data_job = data_job.loc[:, ~data_job.columns.str.contains('^Unnamed')]
+
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=True, header=True)
+            
             return "Data successfully processed"
         except Exception as ex:
             logging.error(f"An error occurred: {str(ex)}")
@@ -186,36 +190,37 @@ class DataRepository:
             logging.info('Everything is fine and life is awesome!')
 
     def process_data(self):
+        data = self.previewed_data
         try:
-            data = self.scraper_app.previewed_data
             if not data:
                 raise ValueError("No previewed data available.")
+            #print(data)
+
+            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
+            existing_df = pd.read_excel('C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx', sheet_name='job offers')
+
+            data_job = pd.DataFrame(data)
+
+            print(data_job)
+
+            if existing_df is not None:
+                existing_df = pd.read_excel(excel_file, sheet_name='job offers')
             else:
-                job_data = {
-                    'job_name': data['job_name'],
-                    'text': data['text'],
-                    'html_text': data['html_text'],
-                }
-                data_job = pd.DataFrame.from_dict(job_data, orient='index')
-                print(data_job)
+                existing_df = pd.DataFrame()
 
-            excel_file = 'outputs/jobs_data.xlsx'
+            data_job = pd.concat([existing_df, data_job], ignore_index=True)
+            data_job = data_job.loc[:, ~data_job.columns.str.contains('^Unnamed')]
 
-            if os.path.exists(excel_file):
-                print(f"Appending data to existing file: {excel_file}")
-                with pd.ExcelWriter(excel_file, mode='a', engine='openpyxl') as writer:
-                    data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
-            else:
-                print(f"Creating new file: {excel_file}")
-                os.makedirs(os.path.dirname(excel_file), exist_ok=True)
-                with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
-                    data_job.to_excel(writer, sheet_name='job offers', index=False)
-
+            with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                data_job.to_excel(writer, sheet_name='job offers', index=True, header=True)
+            
             return "Data successfully processed"
         except Exception as ex:
+            logging.error(f"An error occurred: {str(ex)}")
             return f"An error occurred: {str(ex)}"
-        finally: 
-            print('Everything is fine and life is awesome!')
+        finally:
+            logging.info('Everything is fine and life is awesome!')
+
     
     """ Data handling logic ideas:
     address_data = {
@@ -259,9 +264,10 @@ class ScraperApp:
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
         write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
+        test_button = ft.ElevatedButton('Write test', on_click=self.button_test)
         self.page.add(
             ft.Row(controls=[self.url]),
-            ft.Row(controls=[preview_button, remove_button, write_button]),
+            ft.Row(controls=[preview_button, remove_button, write_button, test_button]),
 
             self.website
         )
@@ -269,6 +275,10 @@ class ScraperApp:
     def button_write_to_db(self, e):
         data_repo = DataRepository(self.previewed_data)
         data_repo.basic_data_handling()
+
+    def button_test(self, e):
+        data_repo = DataRepository(self.previewed_data)
+        data_repo.process_data()
 
     def get_scraper(self, url):
         if 'jobs.cz' in url:

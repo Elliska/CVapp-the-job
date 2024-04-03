@@ -1,4 +1,4 @@
-CVapp the job 
+## CVapp the job 
 
 Why even creating an app? Because it was my dream for a very long time to make an app. I was even drawing my own platform games in elementary school but was never able to make one! Main goal of this app is to learn python and working with databases (data pipelines, transformations, database architecture).
 
@@ -20,8 +20,27 @@ I am well aware **Excel is not a good idea for a database**, yet is perfect for 
 
 ### Prototype
 
-To my surprise first absolutely most needed was not functionality for "where did I sent my CV", rather "to which position I applied". I needed to pick all relevant data without the need to write it manually. Calendar was basically just a plus where was no big manual labor.
+To my surprise first absolutely most needed was not functionality for "where did I sent my CV", rather "to which position I applied to". I needed to pick all relevant data without the need to write it manually. Calendar was basically just a plus with no big manual labor.
 
-It proved challenging to scrape StartUpJobs, therefore I laid it off for some time (dealing with selenium complicated stuff) and went for Jobs.cz which was very easy to scrape. Issue was with the actuall text offer which was clearly inserted in their system with copy-paste style, as many offers had varying text elements and were scraping with different success rate.
+It proved challenging to scrape StartUpJobs, therefore I laid it off for some time (dealing with selenium was complicated stuff) and went for Jobs.cz which was very easy to scrape. Issue was with the actual text offer which was clearly inserted in their system with copy-paste style, as many offers had varying text elements and were scraping with different success rate.
 
-This is a code where I am first using classes and preparing a ground for module use.
+### Purpose of this app
+
+This is a code where I am first using classes and preparing a ground for module use. Therefore my main focus is learn how to use them efficiently and still have working app which could help my needs and help with later data analysis. 
+
+Sole purpose of keeping an eye on all those offers is purely analytical. I want to know when and in which circumstances I have best chances and which technologies are desired in my target field.
+
+It is **not about design and beautiful UI**, even though these things are important to me as well. Currently, design and UX is not even on my priority list as my main learning focus lies in backend.
+
+Plus, if I will ever be able to make this into usable app, it **could help community** a lot.
+
+### Timeline
+
+* 2020 no tracking of where did I sent CV, some notes on paper and a lot of chaos
+* 2021 first simple excel file to track
+* 2022 excel is being redefined as I need more information
+* 2023 simple excel has grown into less simple one with basic analysis
+
+* 2024 January first drafts of an app and its desired use
+* 2024 February first drafts of database, tested in excel in real life use
+* 2024 March first working script for data scraping
