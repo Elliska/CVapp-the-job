@@ -153,8 +153,8 @@ import os
 import pandas as pd
 
 class DataRepository:
-    def __init__(self, scraper_app_instance): 
-        self.scraper_app = scraper_app_instance
+    def __init__(self, previewed_data): 
+        self.scraper_app = previewed_data
 
     def testing(self):
         try:
@@ -168,8 +168,9 @@ class DataRepository:
                 'html_text': data['html_text'],
             }
             data_job = pd.DataFrame.from_dict(job_data, orient='index')
+            print(data_job)
 
-            excel_file = 'jobs_data.xlsx'
+            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
 
             with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
                 data_job.to_excel(writer, sheet_name='job offers', index=False, header=False)
@@ -273,6 +274,7 @@ class ScraperApp:
             scraper.fetch()
             data = scraper.parse()
             self.display_data(data)
+            self.previewed_data.append(data)
         except Exception as ex:
             self.website.controls.append(ft.Text(f'An error occurred: {str(ex)}'))
         finally:
@@ -281,12 +283,7 @@ class ScraperApp:
             self.url.focus()
 
     def button_testing(self, e):
-        df = pd.DataFrame([[11, 21, 31], [12, 22, 32], [31, 32, 33]],
-                  index=['one', 'two', 'three'], columns=['a', 'b', 'c'])
-
-        print(df)
-
-        df.to_excel('pandas_to_excel.xlsx', sheet_name='new_sheet_name')
+        DataRepository.testing(self.previewed_data)
     
     def button_write_to_db(self, e):
         try:
