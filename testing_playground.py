@@ -138,8 +138,6 @@ class KarriereAtScraper(BaseScraper):
         pass
 
 #-----------------------------------------------------------------------------------------------------
-<<<<<<< Updated upstream
-=======
 # Database logic, later into DB
 import openpyxl
 import os
@@ -232,7 +230,6 @@ class DataRepository:
     """
 
 #-----------------------------------------------------------------------------------------------------
->>>>>>> Stashed changes
 # Design logic, later dissect into specific files and modules
 
 class ScraperApp:
@@ -246,17 +243,12 @@ class ScraperApp:
     def setup_ui(self):
         preview_button = ft.ElevatedButton('Offer preview', on_click=self.button_preview)
         remove_button = ft.ElevatedButton('Remove text', on_click=self.button_remove)
-<<<<<<< Updated upstream
-        self.page.add(
-            ft.Row(controls=[self.url]),
-            ft.Row(controls=[preview_button, remove_button]),
-=======
         write_button = ft.ElevatedButton('Write to database', on_click=self.button_write_to_db)
         test_button = ft.ElevatedButton('Test button', on_click=self.button_testing)
         self.page.add(
             ft.Row(controls=[self.url]),
             ft.Row(controls=[preview_button, remove_button, write_button, test_button]),
->>>>>>> Stashed changes
+
             self.website
         )
 
@@ -277,8 +269,6 @@ class ScraperApp:
             self.url.value = ''
             self.page.update()
             self.url.focus()
-<<<<<<< Updated upstream
-=======
 
     def button_testing(self, e):
         df = pd.DataFrame([[11, 21, 31], [12, 22, 32], [31, 32, 33]],
@@ -354,7 +344,6 @@ class ScraperApp:
             self.page.update()
             self.url.focus()
         """
->>>>>>> Stashed changes
 
     def display_data(self, data):
         self.website.controls.clear()
