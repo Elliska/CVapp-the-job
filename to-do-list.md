@@ -7,11 +7,20 @@
 * vymyslet datový pipeline, flowchart
 * nakreslit wireframe aplikace. Čím nahradit Adobe XD? - zkusit Figmu
 
-Doplnit info do Readme:
-*	Jak nainstalovat a rozběhnout na vlastním stroji (detailní) - ideálně odkaz na web
-*	Co udělat pro to, aby mohli rozšiřovat a pracovat na tom taky (pull, fork něco takového)
-
 ### Jobs.cz scraper
 
 * Je potřeba otestovat na vícero inzerátech
 * vyřešit duplikace a chyby zobrazení textu
+
+### Obecné
+* návod: https://www.freecodecamp.org/news/python-requirementstxt-explained/
+
+* nastavit venv z VS (ne ručně):
+    * ctrl+shift+P
+    * hledat Python: Create Environment 
+    * vybrat a vyklikat
+
+* přidat requirements.txt se dělá takto(powershell):
+    * cd na to, kde je venv
+    * pip freeze > requirements.txt
+    * instalace požadavků: pip install -r requirements.txt

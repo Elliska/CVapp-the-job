@@ -152,6 +152,8 @@ class KarriereAtScraper(BaseScraper):
 import openpyxl
 import os
 import pandas as pd
+from pathlib import Path
+from project_path import ProjectPath
 
 class DataRepository:
     def __init__(self, previewed_data):
@@ -164,8 +166,10 @@ class DataRepository:
                 raise ValueError("No previewed data available.")
             #print(data)
 
-            excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
-            existing_df = pd.read_excel('C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx', sheet_name='job offers')
+            #excel_file = 'C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx'
+            excel_file = ProjectPath.jobs_data
+            existing_df = ProjectPath.existing_df
+            #existing_df = pd.read_excel('C:/Users/michaela.maleckova/OneDrive - Seyfor/Projekt/CVapp-the-job/jobs_data.xlsx', sheet_name='job offers')
 
             data_job = pd.DataFrame(data)
 
