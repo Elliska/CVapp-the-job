@@ -79,23 +79,3 @@ class ScraperApp:
         self.website.controls.clear()
         self.page.update()
 
-def main(page):
-    app = ScraperApp(page)
-
-if __name__ == "__main__":
-    ft.app(target=main)
-
-
-# tested on: 
-# https://www.jobs.cz/rpd/2000147251/?searchId=c2227d40-dc5b-47f1-b6bd-37a9caefcdd4&rps=233
-# https://www.jobs.cz/fp/asb-czech-republic-s-r-o-233975/2000176507/?searchId=5b2e93b9-305a-443a-87dd-e647bfdf8e7c&rps=329 
-
-""""
-logika pro tahání tříd z jiných souborů:
-from jobs_cz_scraper import JobsCzScraper
-
-soubor jobs_cz_scraper.py bude mít třídu:
-class JobsCzScraper:
-    # Your scraping logic here
-    ...
-"""
